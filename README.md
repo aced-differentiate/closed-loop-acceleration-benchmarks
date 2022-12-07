@@ -1,6 +1,6 @@
 # By how much can closed-loop frameworks accelerate computational materials discovery?
 
-Data and scripts in support of the publication "By how much can closed-loop frameworks accelerate computational materials discovery?", Kavalsky et al. (2022), arXiv:2211.10533 [cond-mat.mtrl-sci] (2022). DOI: [10.48550/arXiv.2211.10533](https://doi.org/10.48550/arXiv.2211.10533).
+Data and scripts in support of the publication "By how much can closed-loop frameworks accelerate computational materials discovery?", Kavalsky et al., arXiv:2211.10533 [cond-mat.mtrl-sci] (2022). DOI: [10.48550/arXiv.2211.10533](https://doi.org/10.48550/arXiv.2211.10533).
 
 The repository is organized as follows:
 
