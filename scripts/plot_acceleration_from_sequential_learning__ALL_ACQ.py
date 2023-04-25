@@ -483,7 +483,7 @@ def accuracy_per_iteration_plot(
     ax.set_ylim([0.025, max(mean) * 1.10])
     ax.set_xticks(np.arange(init_train_size, ax.get_xlim()[-1] + 1, 20))
     ax.set_xlabel("Size of training data")
-    ax.set_ylabel("Model test accuracy (MAE in eV)")
+    ax.set_ylabel("Model test error (MAE in eV)")
     print("Done.\n")
 
 
