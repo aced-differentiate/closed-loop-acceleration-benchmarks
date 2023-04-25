@@ -57,6 +57,12 @@ def _get_plot_options(acq: str = "mli") -> Dict:
         "random": {"color": "#6c757d", "lw": 2.0, "ls": "--", "label": "Random"},
         "mli": {"color": "C0", "lw": 2.5, "ls": "-", "label": "SL (MLI)"},
         "mu": {"color": "C2", "ls": "-", "lw": 2.5, "label": "SL (MU)"},
+        "space-filling": {
+            "color": "#6c757d",
+            "lw": 2.0,
+            "ls": "-.",
+            "label": "Space-filling",
+        },
     }
     return options[acq]
 
@@ -141,6 +147,15 @@ def _aggregate_per_trial_candidates_data(
     return per_trial_data
 
 
+def get_error(real: Array, pred: Array, metric: str = "mae"):
+    if metric == "mae":
+        return np.mean(np.abs(real - pred))
+    elif metric == "mdae":
+        return np.median(np.abs(real - pred))
+    elif metric == "rmse":
+        return np.sqrt(np.mean((real - pred) ** 2))
+
+
 def _aggregate_per_trial_accuracy_data(
     df: pd.DataFrame,
     histories: Dict,
@@ -150,6 +165,7 @@ def _aggregate_per_trial_accuracy_data(
     bootstrap_size: int = 100,
     n_bootstrap_samples: int = 20,
     n_iterations: int = 1,
+    error_metric: str = "mae",
 ) -> pd.DataFrame:
     y = np.array(df[target_column].values)
     records = []
@@ -175,7 +191,9 @@ def _aggregate_per_trial_accuracy_data(
                         "trial": trial,
                         "iteration": iteration,
                         "bs_sample": bs_sample,
-                        "mae": np.mean(np.abs(y[bs_mask] - pred[bs_mask])),
+                        "error": get_error(
+                            y[bs_mask], pred[bs_mask], metric=error_metric
+                        ),
                     }
                 )
     acc_df = pd.DataFrame(records)
@@ -263,6 +281,10 @@ def targets_per_iteration_plot(
         n_iterations = len(histories[acq]["1"]["train_history"])
     print(f"  Number of frames (SL iterations): {n_iterations}")
 
+    if ax is None:
+        fig = plt.figure(figsize=(6, 6))
+        ax = fig.add_subplot(111)
+
     n_targets = _get_number_of_candidates_in_window(
         df,
         np.ones(len(df), dtype=bool),
@@ -271,10 +293,7 @@ def targets_per_iteration_plot(
     )
     print(f"  Total number of candidates in the target window: {n_targets}")
 
-    for acq in histories:
-        # this plot does not use results using MU acquisition
-        if acq not in ["random", "mli"]:
-            continue
+    for acq in ["random", "space-filling", "mu", "mli"]:
         per_trial_data = _aggregate_per_trial_candidates_data(
             df,
             histories[acq],
@@ -349,10 +368,11 @@ def distances_per_iteration_plot(
         n_iterations = len(histories[acq]["1"]["train_history"])
     print(f"  Number of frames (SL iterations): {n_iterations}")
 
-    for acq in histories:
-        # this plot does not use results using MU acquisition
-        if acq not in ["random", "mli"]:
-            continue
+    if ax is None:
+        fig = plt.figure(figsize=(6, 6))
+        ax = fig.add_subplot(111)
+
+    for acq in ["random", "space-filling", "mu", "mli"]:
         per_trial_data = _aggregate_per_trial_candidates_data(
             df,
             histories[acq],
@@ -416,14 +436,20 @@ def accuracy_per_iteration_plot(
         fig = plt.figure(figsize=(6, 6))
         ax = fig.add_subplot(111)
 
-    for acq in ["random", "mu"]:
+    for acq in ["random", "space-filling", "mu", "mli"]:
         # aggregate data and calculate stats to plot
         _df = _aggregate_per_trial_accuracy_data(
-            df, histories[acq], target_column=target_column, n_iterations=n_iterations
+            df,
+            histories[acq],
+            target_column=target_column,
+            n_iterations=n_iterations,
+            error_metric="mae",
         )
         iterations = sorted(list(set(_df["iteration"].values)))
-        mean = np.array([_df[_df["iteration"] == i]["mae"].mean() for i in iterations])
-        unct = np.array([_df[_df["iteration"] == i]["mae"].std() for i in iterations])
+        mean = np.array(
+            [_df[_df["iteration"] == i]["error"].mean() for i in iterations]
+        )
+        unct = np.array([_df[_df["iteration"] == i]["error"].std() for i in iterations])
         size = init_train_size + np.array(range(len(mean)))
 
         ax.plot(
@@ -442,19 +468,19 @@ def accuracy_per_iteration_plot(
         )
 
     # annotate example target accuracy
-    target_mae = 0.1
-    ax.axhline(y=target_mae, ls="--", color="k")
+    target_error = 0.1
+    ax.axhline(y=target_error, ls="--", color="k")
     ax.text(
         init_train_size + (n_iterations * 0.5),
-        target_mae - 0.025,
-        f"Target accuracy = {target_mae} eV",
+        target_error - 0.025,
+        f"Target accuracy = {target_error} eV",
         ha="center",
         va="center",
         color="k",
     )
 
     ax.set_xlim([init_train_size, n_iterations + init_train_size])
-    ax.set_ylim([0.025, max(mean) * 1.05])
+    ax.set_ylim([0.025, max(mean) * 1.10])
     ax.set_xticks(np.arange(init_train_size, ax.get_xlim()[-1] + 1, 20))
     ax.set_xlabel("Size of training data")
     ax.set_ylabel("Model test accuracy (MAE in eV)")
@@ -565,7 +591,7 @@ def make_figure(
     # plot the consolidated legend
     print("Adding legend...")
     handles = []
-    for acq in ["mli", "mu", "random"]:
+    for acq in ["mli", "mu", "random", "space-filling"]:
         handle = Line2D(
             [],
             [],
@@ -575,7 +601,9 @@ def make_figure(
             label=_get_plot_options(acq)["label"],
         )
         handles.append(handle)
-    ax.legend(handles=handles, ncol=3, bbox_to_anchor=(0.10, -0.15), fontsize=24)
+    ax.legend(
+        handles=handles, ncol=len(handles), bbox_to_anchor=(0.40, -0.15), fontsize=24
+    )
     print("Done.\n")
 
     plt.savefig(filename, bbox_inches="tight", dpi=300)
@@ -602,4 +630,10 @@ if __name__ == "__main__":
     target_window = [-0.7, -0.5]
 
     # make the 3-panel figure and write it to disk
-    make_figure(df, histories, target_column=target_column, target_window=target_window)
+    make_figure(
+        df,
+        histories,
+        target_column=target_column,
+        target_window=target_window,
+        filename="acceleration_from_sequential_learning__ALL_ACQ.png",
+    )

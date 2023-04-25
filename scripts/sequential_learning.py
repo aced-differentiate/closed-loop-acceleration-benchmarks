@@ -10,6 +10,8 @@ from typing import Union
 import numpy as np
 import pandas as pd
 from scipy import stats
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics.pairwise import euclidean_distances
 
 from matminer.featurizers.base import MultipleFeaturizer
 from matminer.featurizers.composition import ElementProperty
@@ -22,11 +24,12 @@ Array = Union[List[float], np.ndarray]
 
 def _df_to_magpie_features(df: pd.DataFrame, column: str = "formula") -> pd.DataFrame:
     # get pymatgen composition objects from a string formula or dictionaries
-    df = StrToComposition(target_col_id="pmg_comp").featurize_dataframe(
-        df=df, col_id=column
-    )
+    converter = StrToComposition(target_col_id="pmg_comp")
+    converter.set_n_jobs(1)
+    df = converter.featurize_dataframe(df=df, col_id=column)
     # convert composition into magpie features
     featurizer = MultipleFeaturizer([ElementProperty.from_preset("magpie")])
+    featurizer.set_n_jobs(1)
     df = featurizer.featurize_dataframe(df=df, col_id="pmg_comp")
     # remove the pmg_composition (extraneous) column
     df = df[[c for c in df.columns if c not in ["pmg_comp"]]]
@@ -46,6 +49,7 @@ def choose_next_candidate(
     pred: Array,
     unct: Array,
     /,
+    non_feature_columns: List[str] = None,
     acquisition_function: str = "random",
     *,
     target_window: List[float] = None,
@@ -60,6 +64,11 @@ def choose_next_candidate(
             whether the example corresponding to that index was used for training.
         pred (Array): Predicted values for the property of interest.
         unct (Array): Uncertainties in the predicted values for the property of interest.
+        non_feature_columns (List[str], optional): A list of strings with the names of
+            the columns to exclude from the dataframe to retrieve the feature vectors.
+            Note: This list should include the target property column as well.
+            Defaults to ["id", "name", "formula", "composition",
+                         "binding_energy_of_adsorbed"].
         acquisition_function (str, optional): Label of the acquisition function to use to
             rank and choose candidates from the pool of possible candidates (i.e., from
             all the examples in the full dataset that were not used for training).
@@ -70,6 +79,8 @@ def choose_next_candidate(
                   In this particular problem, this is equivalent to maximum likelihood
                   of the value falling in the target window.
                 - "mu": select the candidate with the maximum prediction uncertainty.
+                - "space-filling": select the candidate that is farthest away in feature
+                  space to the current training set.
             Defaults to "random".
         target_window (List[float], optional): Window [lower limit, upper limit] of
             property values that is optimal. Used to calculate candidate scores for the
@@ -87,6 +98,15 @@ def choose_next_candidate(
     """
     if target_window is None:
         target_window = [-0.7, -0.5]
+    if non_feature_columns is None:
+        non_feature_columns = [
+            "id",
+            "name",
+            "formula",
+            "composition",
+            "binding_energy_of_adsorbed",
+        ]
+
     print(f"  Acquisition function (AF): {acquisition_function}")
     if acquisition_function.lower() == "random":
         next_idx = np.random.choice(len(df["binding_energy_of_adsorbed"][~train_mask]))
@@ -120,6 +140,20 @@ def choose_next_candidate(
         parent_idx = np.arange(unct.shape[0])[~train_mask][next_idx]
         # get the actual value of the MU score for record keeping
         max_score = np.max(unct[~train_mask])
+    elif acquisition_function.lower() == "space-filling":
+        feature_columns = [c for c in df.columns if c not in non_feature_columns]
+        X = np.array(df[feature_columns].values)
+        # scale the data (for using distance-based metrics)
+        scaler = StandardScaler()
+        X = scaler.fit_transform(X)
+        # calculate all pairwise distances between examples (feature vectors)
+        D = euclidean_distances(X, X)
+        # print(f"D.shape: {D.shape}")
+        # choose the candidate in the design space that is farthest away from the
+        # training set
+        next_idx = np.argmax(np.min(D[np.ix_(~train_mask, train_mask)], axis=1))
+        parent_idx = np.arange(D.shape[0])[~train_mask][next_idx]
+        max_score = np.max(np.min(D[np.ix_(~train_mask, train_mask)], axis=1))
     else:
         msg = f'Acquisition function "{acquisition_function}" not supported'
         raise NotImplementedError(msg)
@@ -135,9 +169,9 @@ def choose_next_candidate(
 
 def do_simulated_sl(
     df: pd.DataFrame,
+    /,
     column_to_magpie: str = "formula",
     target_column: str = "target",
-    /,
     *,
     exclude_columns: List[str] = None,
     init_train_size: int = 10,
@@ -217,7 +251,7 @@ def do_simulated_sl(
 
     # training masks and their per-iteration history
     train_mask = np.zeros(len(X), dtype=bool)
-    train_mask[np.random.choice(len(X), init_train_size, replace=False)] = 1
+    train_mask[np.random.choice(len(X), init_train_size, replace=False)] = True
     train_history = [train_mask]
 
     # store history of all predictions and uncertainties
@@ -246,6 +280,7 @@ def do_simulated_sl(
             train_mask,
             pred,
             unct,
+            non_feature_columns=_exclude_columns,
             acquisition_function=acquisition_function,
             target_window=target_window,
         )
@@ -272,9 +307,9 @@ def do_simulated_sl(
 
 def do_multiple_simulated_sl_trials(
     df: pd.DataFrame,
+    /,
     column_to_magpie: str = "formula",
     target_column: str = "target",
-    /,
     *,
     exclude_columns: List[str] = None,
     init_train_size: int = 10,
@@ -381,6 +416,8 @@ def do_multiple_simulated_sl_trials(
     # multiple full SL pipeline trials for extracting robust stats
     histories = {}
     for acquisition_function in acquisition_functions:
+        print(f"ACQUISITION FUNCTION: {acquisition_function}")
+        print("")
         history_per_trial = {}
         for trial in range(1, n_trials + 1):
             print(f"TRIAL #{trial}")
@@ -424,7 +461,7 @@ if __name__ == "__main__":
         "init_train_size": 10,
         "n_iterations": 100,
         "n_trials": 20,
-        "acquisition_functions": ["random", "mli", "mu"],
+        "acquisition_functions": ["random", "mli", "mu", "space-filling"],
         "target_window": [-0.7, -0.5],
     }
 
