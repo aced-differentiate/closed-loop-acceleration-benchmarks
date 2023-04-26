@@ -342,7 +342,8 @@ def distances_per_iteration_plot(
     Plot the average candidate distance to the target window as a function of SL
     iteration, and color an area around the average to indicate uncertainty (calculated
     as +/- std over independent SL trials). Compare the performance of maximum
-    likelihood of improvement (MLI) and random acquisition functions.
+    likelihood of improvement (MLI), maximum uncertainty (MU), space-filling, 
+    and random acquisition functions.
 
     Args:
         df (pd.DataFrame): The full dataset.
