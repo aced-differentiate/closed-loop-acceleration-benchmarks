@@ -408,8 +408,9 @@ def accuracy_per_iteration_plot(
     ax: Axes = None,
 ):
     """
-    Plot model accuracy as a function of SL iteration for the maximum uncertainty (MU)
-    acquisition function, and color an area around the average to indicate uncertainty
+    Plot model accuracy as a function of SL iteration for, maximum uncertainty (MU),
+    maximum likelihood of improvement (MLI), space-filling, and random
+    acquisition functions, and color an area around the average to indicate uncertainty
     (calculated as +/- std over independent SL trials).
 
     Args:
