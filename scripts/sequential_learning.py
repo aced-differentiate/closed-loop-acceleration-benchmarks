@@ -148,9 +148,8 @@ def choose_next_candidate(
         X = scaler.fit_transform(X)
         # calculate all pairwise distances between examples (feature vectors)
         D = euclidean_distances(X, X)
-        # print(f"D.shape: {D.shape}")
-        # choose the candidate in the design space that is farthest away from the
-        # training set
+        # choose the unlabelled candidate in the design space whose 
+        # closest neighbor in the training set is the farthest away
         next_idx = np.argmax(np.min(D[np.ix_(~train_mask, train_mask)], axis=1))
         parent_idx = np.arange(D.shape[0])[~train_mask][next_idx]
         max_score = np.max(np.min(D[np.ix_(~train_mask, train_mask)], axis=1))
