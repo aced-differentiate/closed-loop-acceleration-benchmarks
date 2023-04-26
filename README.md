@@ -20,7 +20,7 @@ The repository is organized as follows:
 
     * [runtime\_geometries/](data/runtime_geometries)
 
-        "Chemically-informed" and naive structures and settings in the form of `ase.traj` files, corresponding to the discussion surrounding Figure 3 in the paper. The files can be read using ASE package (using [`ase.io.read`](https://wiki.fysik.dtu.dk/ase/ase/io/io.html#ase.io.read)).
+        "Chemically-informed" and naive structures and settings in the form of `ase.traj` files, corresponding to the discussion surrounding FIG.~3 in the main text. The files can be read using ASE package (using [`ase.io.read`](https://wiki.fysik.dtu.dk/ase/ase/io/io.html#ase.io.read)).
 
 2. [scripts/](scripts)
 
@@ -28,12 +28,15 @@ The repository is organized as follows:
 
     * `sequential_learning.py`: Script for running multiple independent trials of sequential learning (SL) and recording a history of training examples, model predictions and prediction uncertainties.
     
-        If run as-is, the script performs 20 independent trials of 100 SL iterations to optimize the `binding_energy_of_adsorbed` property in the bimetallic catalysts dataset mentioned above, using three acquisition functions (results from each recorded separately): random, maximum likelihood of improvement (MLI) and maximum uncertainty (MU).
+        If run as-is, the script performs 20 independent trials of 100 SL iterations to optimize the `binding_energy_of_adsorbed` property in the bimetallic catalysts dataset mentioned above, using four acquisition functions (results from each recorded separately): random, maximum likelihood of improvement (MLI), maximum uncertainty (MU), and space-filling.
 
     * `plot_acceleration_from_sequential_learning.py`: Script to aggregate results from the `sequential_learning.py` script, calculate and plot statistics related to acceleration from SL over a baseline.
 
-        If run as-is, the script reproduces the 3-paneled Figure 5 in the paper.
+        If run as-is, the script reproduces the 3-paneled FIG.~5 in the main text.
 
+    * `plot_acceleration_from_sequential_learning__ALL_ACQ.py`: Similar to the previous script; plots and compares statistics from all acquisition functions considered (MLI, MU, random, space-filling) for all SL tasks.
+
+        If run as-is, the script reproduces the 3-paneled FIG.~S1 in the Supplementary Information.
 
 ## Running the scripts
 
