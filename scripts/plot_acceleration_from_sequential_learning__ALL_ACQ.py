@@ -7,7 +7,7 @@ averaging, and plotting functionalities implemented here contain several hard-co
 problem-specific parameters. Please do not expect these functions to work as-is without
 modifications for generating similar figures for a different problem.
 
-The `make_figure` function encapsulates the overall task of generating Figure 5, with
+The `make_figure` function encapsulates the overall task of generating Figure S1, with
 functionality related to plotting individual panels delegated to
 `["targets"/"distances"/"iterations"]_per_iteration_plot` functions.
 A typical workflow can be found in the module execution block at the bottom.
