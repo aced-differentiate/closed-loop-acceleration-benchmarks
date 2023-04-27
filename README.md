@@ -38,6 +38,10 @@ The repository is organized as follows:
 
         If run as-is, the script reproduces the 3-paneled FIG.~S1 in the Supplementary Information.
 
+    * `plot_levels_of_automation.py`: Script for plotting the cumulative time  of executing the DFT pipeline at varying levels of automation.
+
+        If run as-is, the script reproduces the bottom panel from FIG.~2 in the main text.
+
 ## Running the scripts
 
 The required packages for executing the scripts are specified in `requirements.txt`,
