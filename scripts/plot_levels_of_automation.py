@@ -20,7 +20,7 @@ rcParams.update(
         "lines.dashed_pattern": (5, 2.5),
         "legend.edgecolor": "black",
         "lines.markersize": 8,
-        "lines.linewidth": 2.0
+        "lines.linewidth": 2.0,
     }
 )
 
@@ -31,7 +31,7 @@ TRADITIONAL = 60 * np.array([16, 9, 10, 9, 9, 3, 2])
 def cumulative_time_trajectory(combination_of_auto: List[bool]) -> List[int]:
     """
     Given a combination of using the automation tools, estimates a cumulative time
-    for evaluation per catalyst. 
+    for evaluation per catalyst.
 
     Parameters
     ----------
@@ -52,24 +52,54 @@ def cumulative_time_trajectory(combination_of_auto: List[bool]) -> List[int]:
     return history
 
 
-fig, ax = plt.subplots(figsize=(8,6))
-ax.set_ylabel("Cumulative time (s)")
-ax.set_xlabel("Step")
+if __name__ == "__main__":
+    fig = plt.figure(figsize=(8, 6))
+    ax = fig.add_subplot(111)
+    ax.set_ylabel("Cumulative time (s)")
+    ax.set_xlabel("Step")
 
-# manually specify combinations
-# fully automated
-ax.plot(range(1,len(AUTOMATED)+1), cumulative_time_trajectory([True] * len(AUTOMATED)), "-o", label="Fully automated")
-# fully traditional
-ax.plot(range(1,len(AUTOMATED)+1), cumulative_time_trajectory([False] * len(AUTOMATED)), "--o", label="Fully traditional")
-# autocat but no dftparse or dftinputgen
-combo = [True, False, True, True, False, False, False]
-ax.plot(range(1,len(AUTOMATED)+1), cumulative_time_trajectory(combo), "-.o", label="Automated structure generation")
-# no autocat but dftparse and dftinputgen
-combo = [False, True, False, False, True, True, True]
-ax.plot(range(1,len(AUTOMATED)+1), cumulative_time_trajectory(combo), ":o", label="Automated DFT pre- and post-processing")
+    # manually specify combinations
+    # fully automated
+    ax.plot(
+        range(1, len(AUTOMATED) + 1),
+        cumulative_time_trajectory([True] * len(AUTOMATED)),
+        "-o",
+        label="Fully automated",
+    )
+    # fully traditional
+    ax.plot(
+        range(1, len(AUTOMATED) + 1),
+        cumulative_time_trajectory([False] * len(AUTOMATED)),
+        "--o",
+        label="Fully traditional",
+    )
+    # autocat but no dftparse or dftinputgen
+    combo = [True, False, True, True, False, False, False]
+    ax.plot(
+        range(1, len(AUTOMATED) + 1),
+        cumulative_time_trajectory(combo),
+        "-.o",
+        label="Automated structure generation",
+    )
+    # no autocat but dftparse and dftinputgen
+    combo = [False, True, False, False, True, True, True]
+    ax.plot(
+        range(1, len(AUTOMATED) + 1),
+        cumulative_time_trajectory(combo),
+        ":o",
+        label="Automated DFT pre- and post-processing",
+    )
 
-ax.legend(loc="upper center", bbox_to_anchor=(0.5, -0.15), markerscale=0., fontsize=14, ncol=2, framealpha=1, borderpad=0.5)
+    ax.legend(
+        loc="upper center",
+        bbox_to_anchor=(0.5, -0.15),
+        markerscale=0.0,
+        fontsize=14,
+        ncol=2,
+        framealpha=1,
+        borderpad=0.5,
+    )
 
-ax.set_yscale("log")
+    ax.set_yscale("log")
 
-plt.savefig("levels_of_automation.png", bbox_inches="tight", dpi=200)
+    plt.savefig("levels_of_automation.png", bbox_inches="tight", dpi=200)
