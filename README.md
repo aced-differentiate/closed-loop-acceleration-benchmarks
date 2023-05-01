@@ -20,7 +20,7 @@ The repository is organized as follows:
 
     * [runtime\_geometries/](data/runtime_geometries)
 
-        "Chemically-informed" and naive structures and settings in the form of `ase.traj` files, corresponding to the discussion surrounding FIG.~3 in the main text. The files can be read using ASE package (using [`ase.io.read`](https://wiki.fysik.dtu.dk/ase/ase/io/io.html#ase.io.read)).
+        "Chemically-informed" and naive structures and settings in the form of `ase.traj` files, corresponding to the discussion surrounding FIG. 3 in the main text. The files can be read using ASE package (using [`ase.io.read`](https://wiki.fysik.dtu.dk/ase/ase/io/io.html#ase.io.read)).
 
 2. [scripts/](scripts)
 
@@ -32,15 +32,15 @@ The repository is organized as follows:
 
     * `plot_acceleration_from_sequential_learning.py`: Script to aggregate results from the `sequential_learning.py` script, calculate and plot statistics related to acceleration from SL over a baseline.
 
-        If run as-is, the script reproduces the 3-paneled FIG.~5 in the main text.
+        If run as-is, the script reproduces the 3-paneled FIG. 5 in the main text.
 
     * `plot_acceleration_from_sequential_learning__ALL_ACQ.py`: Similar to the previous script; plots and compares statistics from all acquisition functions considered (MLI, MU, random, space-filling) for all SL tasks.
 
-        If run as-is, the script reproduces the 3-paneled FIG.~S1 in the Supplementary Information.
+        If run as-is, the script reproduces the 3-paneled FIG. S1 in the Supplementary Information.
 
     * `plot_levels_of_automation.py`: Script for plotting the cumulative time  of executing the DFT pipeline at varying levels of automation.
 
-        If run as-is, the script reproduces the bottom panel from FIG.~2 in the main text.
+        If run as-is, the script reproduces the bottom panel from FIG. 2 in the main text.
 
 ## Running the scripts
 
