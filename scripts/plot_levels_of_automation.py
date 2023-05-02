@@ -24,6 +24,31 @@ rcParams.update(
     }
 )
 
+# The below variables, `TRADITIONAL` and `AUTOMATED`
+# are used to input the timings (in s) for all individual steps
+# in a given computational pipeline.
+#
+# For example, let's consider a hypothetical pipeline
+# of three tasks where the traditional
+# approach takes 3min for each task and 1s when automated.
+# This would be input as:
+#
+# AUTOMATED = np.array([1, 1, 1])
+# TRADITIONAL = 60 * np.array([3, 3, 3])
+#
+# Here we consider the pipeline illustrated in Fig. 2 of the
+# main manuscript (excluding the DFT runtimes), with
+# timings obtained from Table II
+#
+# TASK NUMBER  |           TASK
+#     0        |  Clean surface
+#     1        |  Generating DFT inp and job mgmt scripts
+#     2        |  Site identification
+#     3        |  Adsorbate placement
+#     4        |  Generating DFT inp and job mgmt scripts
+#     5        |  Data collection
+#     6        |  Adsorption energy calculation
+
 AUTOMATED = np.array([2, 1, 1, 1, 1, 9, 1])
 TRADITIONAL = 60 * np.array([16, 9, 10, 9, 9, 3, 2])
 
